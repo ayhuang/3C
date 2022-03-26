@@ -11,19 +11,12 @@ GAP_BETWEEN_SAMPLE = 2
 # find the last non zero col
 def last_non_zero_col( arr ):
    # print(f' measure array shape {arr.shape}')
-    max_col_idx = 0
-    measure_idx = 0
-    widest_measure = None
-    for k in range( 0, arr.shape[0]):
-        m = arr[k]  # a single measure, (100,2)
-        non_zero = m.nonzero()
-        largest_non_zero_idx = max(non_zero[0][len(non_zero[0])-1], non_zero[1][len(non_zero[1])-1])
-        if max_col_idx < largest_non_zero_idx:
-            max_col_idx = largest_non_zero_idx
-            measure_idx = k
-            widest_measure = m
-
-    return measure_idx, max_col_idx, widest_measure
+    # arr has the shape (no.of measures, 100,2)
+    non_zero = arr.nonzero() #
+    max_col_idx =  max( non_zero[1])
+    measure_idx = non_zero[0][ np.argmax( non_zero[1])]
+    deepest_measure = arr[measure_idx]
+    return measure_idx, max_col_idx, deepest_measure
 
 # loan data based on meta_data_file, return x_train, y_train, x_val, y_val
 def find_padding( meta_data_file, measures_per_sample = MEASURES_PER_SAMPLE, max_skip_rate = 2 ):
@@ -38,7 +31,6 @@ def find_padding( meta_data_file, measures_per_sample = MEASURES_PER_SAMPLE, max
     non_zero_col = 0
     largest_measure = None
     for index, row in df1.iterrows():
-        composer = row['composer']
         npy_file = row['npy_file_path']
         encoded_measure_array = np.load(npy_file)
         (m_idx, max_non_zero_col, widest_measure) = last_non_zero_col(encoded_measure_array)

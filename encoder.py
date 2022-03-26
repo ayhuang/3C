@@ -50,7 +50,7 @@ def transpose2C( s, k ):
         return s.transpose(i)
 
 def stream2array( s, to_pad=True, target_size=MAX_DEPTH, sample_freq=SAMPLE_FREQ, max_note_dur=MAX_NOTE_DUR):
-    s.show('text')
+    #s.show('text')
     score_array  = stream2chordarr(s, sample_freq, max_note_dur)
     x = chordarr2npenc( score_array )
     if x.shape[0] > target_size:
