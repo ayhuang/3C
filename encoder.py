@@ -18,6 +18,8 @@ MAJOR = 'major'
 MINOR = 'minor'
 MAX_DEPTH = 100 # max number of notes plus rests in a single measure
 
+MTEMPO_SIZE = 120
+
 MAX_MEASURE_NUM = 2000
 MAX_MEASURE_DEPTH = 100
 MEASURES_PER_SAMPLE = 5
@@ -48,6 +50,7 @@ def transpose2C( s, k ):
         return s.transpose(i)
 
 def stream2array( s, to_pad=True, target_size=MAX_DEPTH, sample_freq=SAMPLE_FREQ, max_note_dur=MAX_NOTE_DUR):
+    s.show('text')
     score_array  = stream2chordarr(s, sample_freq, max_note_dur)
     x = chordarr2npenc( score_array )
     if x.shape[0] > target_size:
@@ -56,8 +59,9 @@ def stream2array( s, to_pad=True, target_size=MAX_DEPTH, sample_freq=SAMPLE_FREQ
         npad=((0, target_size - x.shape[0]),(0,0))
         x = np.pad(x, npad, mode='constant', constant_values=[-1,0])
 
+    return x
     # x is of the shape (rows, 2), return it as one-dimensional array
-    return x.reshape(-1)
+    #return x.reshape(-1)
 
 
 def encodeFromMidi( midi_file, toTranspose = False ):
@@ -77,6 +81,11 @@ def encodeFromMidi( midi_file, toTranspose = False ):
         measure_idx +=1
 
     return np.array( tmp )
+
+def decodeFromArray( measure_array ):
+    a = np.reshape(measure_array, (-1,2))
+    t = npenc2chordarr( a )
+    return chordarr2stream( t )
 
 def npenc2idxenc(t, vocab, seq_type=SEQType.Sentence, add_eos=False):
     "Transforms numpy array from 2 column (note, duration) matrix to a single column"
@@ -157,7 +166,9 @@ def timestep2npenc(timestep, note_range=PIANO_RANGE, enc_type=None):
     
     if enc_type is None: 
         # note, duration
-        return [n[:2] for n in notes] 
+        a = [n[:2] for n in notes]
+        # remove dups
+        return np.unique( a, axis=0)
     if enc_type == 'parts':
         # note, duration, part
         return [n for n in notes]
@@ -350,3 +361,4 @@ def avg_tempo(t, sep_idx=VALTSEP):
 
 def avg_pitch(t, sep_idx=VALTSEP):
     return t[t[:, 0] > sep_idx][:, 0].mean()
+
