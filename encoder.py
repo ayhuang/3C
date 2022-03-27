@@ -165,10 +165,10 @@ def timestep2npenc(timestep, note_range=PIANO_RANGE, enc_type=None):
     notes = sorted(notes, key=lambda x: x[0], reverse=True) # sort by note (highest to lowest)
     
     if enc_type is None: 
-        # note, duration
-        a = [n[:2] for n in notes]
-        # remove dups
-        return np.unique( a, axis=0)
+        # note, duration,  remove dups
+        a = np.unique([n[:2] for n in notes], axis=0)
+        # only take top 5 notes
+        return a[0:5]
     if enc_type == 'parts':
         # note, duration, part
         return [n for n in notes]
