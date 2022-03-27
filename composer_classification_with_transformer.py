@@ -56,13 +56,18 @@ def encode_composer( name ):
     composers = ['Bach', 'Beethoven', 'Brahms', 'Chopin', 'Haendel', 'Haydn', 'Mendelssohn', 'Mozart', 'Schubert', 'Vivaldi']
     return composers.index( name )
 
-#
-#def normalize_pitch( x ):
-
+# the measure array has the shape (no, 100, 2)
+def normalize_measure_array( x ):
+    a = np.empty( x.shape, dtype='float32')
+    # the pitch ranges from 21 to 108, middle C is 64, note rest is marked as -1
+    a[:,:,0] = x[:,:,0]/88
+    # assuming time duration ranges from 1 to 16
+    a[:,:,1] = x[:,:,1]/16
+    return a
 
 
 # loan data based on meta_data_file, return x_train, y_train, x_val, y_val
-def load_data( meta_data_file, measures_per_sample = MEASURES_PER_SAMPLE, max_skip_rate = 2 ):
+def load_data( meta_data_file, shuffle=True, measures_per_sample = MEASURES_PER_SAMPLE, max_skip_rate = 2 ):
     df = pd.read_csv( meta_data_file )
     pd.options.display.width= None
 
@@ -71,36 +76,53 @@ def load_data( meta_data_file, measures_per_sample = MEASURES_PER_SAMPLE, max_sk
     df1 = df[ (df.use == 't') | (df.use == 'v')]
     print( f'npy file count {df1.shape[0]} ')
     #df2 = df1.groupby(by=['composer','use'])['length_in_measures'].sum()
-    y_train = []
-    x_train = []
-    y_val = []
-    x_val = []
+
+    s_val = [];  s_train = []
+    # a sample is composed of "measures_per_sample" of measures,
+    # between two samples, skip a random number of measures
     for index, row in df1.iterrows():
         composer = row['composer']
         npy_file =  row['npy_file_path']
-        encoded_measure_array = np.load(npy_file)
+        encoded_measure_array = normalize_measure_array(np.load(npy_file))
         measures_in_file = encoded_measure_array.shape[0]
         #print( f' read {measures_in_file} measures from {npy_file}')
         k1 = 0
         k2 = k1 + measures_per_sample
         while k2 < measures_in_file:
+
+            #y_val.append( encode_composer( composer ))
+            # make one sample
+            s = encoded_measure_array[k1:k2] # shape = (measures_per_sample, max_depth_per_measure, 2)
+            s = s.reshape( measures_per_sample, s.shape[1] * s.shape[2]) # reshape each single measure from (max_depth_per_measure,2) to a vector of ( 2*max_depth_per_measure)
+            # for each measure add composer label as the last column
+            x = np.full(( measures_per_sample, s.shape[1] + 1), encode_composer( composer ),dtype='float32')
+            x[:,:-1] = s
             if row['use'] == 'v':
-                y_val.append( encode_composer( composer ))
-                x_val.append( encoded_measure_array[k1:k2])
+                s_val.append( x )
             if row['use'] == 't':
-                y_train.append( encode_composer( composer ))
-                x_train.append( encoded_measure_array[k1:k2])
+                s_train.append( x )
             #skip random number of measures
             k1 = k2 + random.randint(0, max_skip_rate)
             k2 = k1 + measures_per_sample
 
-    return np.array(x_train), np.array(y_train), np.array(x_val), np.array(y_val)
+    train_arr = np.array(s_train)
+    val_arr = np.array(s_val)
+    if shuffle:
+         np.random.shuffle( train_arr )
+         np.random.shuffle( val_arr )
+
+    #separate label, input
+    x_train = train_arr[:,:,:-1]
+    x_val = val_arr[:,:,:-1]
+    y_train = train_arr[:,1,-1].reshape(-1)
+    y_val = val_arr[:,1,-1].reshape(-1)
+    return (x_train, y_train),(x_val, y_val)
 
 
-x_train, y_train, x_val, y_val = load_data(META_CVS_PATH)
+(x_train, y_train), (x_val, y_val) = load_data(META_CVS_PATH, shuffle=False)
 
-print(len(x_train), "Training sequences")
-print(len(x_val), "Validation sequences")
+print(f' {x_train.shape} Training sequences, with label {y_train.shape}')
+print(f' {x_val.shape} Training sequences, with label {y_val.shape}')
 
 
 """## Create classifier model using transformer layer
@@ -120,9 +142,9 @@ x = embedding_layer(inputs)
 transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
 x = transformer_block(x)
 x = layers.GlobalAveragePooling1D()(x)
-x = layers.Dropout(0.1)(x)
-x = layers.Dense(20, activation="relu")(x)
-x = layers.Dropout(0.1)(x)
+x = layers.Dropout(0.2)(x)
+x = layers.Dense(200, activation="relu")(x)
+x = layers.Dropout(0.2)(x)
 outputs = layers.Dense(10, activation="softmax")(x)
 
 model = keras.Model(inputs=inputs, outputs=outputs)
