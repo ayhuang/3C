@@ -167,8 +167,8 @@ def timestep2npenc(timestep, note_range=PIANO_RANGE, enc_type=None):
     if enc_type is None: 
         # note, duration,  remove dups
         a = np.unique([n[:2] for n in notes], axis=0)
-        # only take top 5 notes
-        return a[0:5]
+        # only take top 3 notes
+        return a[0:3]
     if enc_type == 'parts':
         # note, duration, part
         return [n for n in notes]
