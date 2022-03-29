@@ -9,8 +9,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-COMPOSERS_LIST = ['Bach', 'Beethoven', 'Haydn', 'Mozart', 'Schubert', 'Other']
-
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
         super(TransformerBlock, self).__init__()
@@ -50,6 +48,7 @@ class TokenAndPositionEmbedding(layers.Layer):
         return x + positions
 
 
+COMPOSERS_LIST = ['Bach', 'Beethoven', 'Haydn', 'Mozart', 'Schubert', 'Other']
 def encode_composer( name ):
 
     if name in COMPOSERS_LIST:
@@ -57,7 +56,8 @@ def encode_composer( name ):
     else:
         return 5  # other
 
-# the measure array has the shape (no, 100, 2)
+
+# the measure array has the shape (none, 100, 2)
 def normalize_measure_array( x ):
     a = np.empty( x.shape, dtype='float32')
     # the pitch ranges from 21 to 108, middle C is 64, note rest is marked as -1
@@ -124,8 +124,8 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
 
 ###############################################################################
 META_CVS_PATH = "Dataset/classifier/meta_data_labeled.csv"
-MEASURES_PER_SAMPLE = 5
-GAP_BETWEEN_SAMPLE = 2
+MEASURES_PER_SAMPLE = 6
+GAP_BETWEEN_SAMPLE = 3
 (x_train, y_train), (x_val, y_val) = load_data(META_CVS_PATH,measures_per_sample=MEASURES_PER_SAMPLE,max_skip_rate=GAP_BETWEEN_SAMPLE, shuffle=True)
 
 print(f' {x_train.shape} Training sequences, with label {y_train.shape}')
