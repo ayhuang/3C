@@ -9,6 +9,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+COMPOSERS_LIST = ['Bach', 'Beethoven', 'Haydn', 'Mozart', 'Schubert', 'Other']
+
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
         super(TransformerBlock, self).__init__()
@@ -49,8 +51,11 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 
 def encode_composer( name ):
-    composers = ['Bach', 'Beethoven', 'Brahms', 'Chopin', 'Haendel', 'Haydn', 'Mendelssohn', 'Mozart', 'Schubert', 'Vivaldi']
-    return composers.index( name )
+
+    if name in COMPOSERS_LIST:
+        return COMPOSERS_LIST.index(name)
+    else:
+        return 5  # other
 
 # the measure array has the shape (no, 100, 2)
 def normalize_measure_array( x ):
@@ -93,8 +98,6 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
             # for each measure add composer label as the last column
             x = np.full(( measures_per_sample, s.shape[1] + 1), encode_composer( composer ),dtype='float32')
             x[:,:-1] = s
-            if row['use'] == 'v':
-                s_train.append( x )
             if row['use'] == 't':
                 s_train.append( x )
             #skip random number of measures
@@ -121,7 +124,7 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
 
 ###############################################################################
 META_CVS_PATH = "Dataset/classifier/meta_data_labeled.csv"
-MEASURES_PER_SAMPLE = 4
+MEASURES_PER_SAMPLE = 5
 GAP_BETWEEN_SAMPLE = 2
 (x_train, y_train), (x_val, y_val) = load_data(META_CVS_PATH,measures_per_sample=MEASURES_PER_SAMPLE,max_skip_rate=GAP_BETWEEN_SAMPLE, shuffle=True)
 
@@ -139,6 +142,7 @@ use a feed forward network on top of it to classify text.
 embed_dim = 200  # Embedding size for each token
 num_heads = 2  # Number of attention heads
 ff_dim = 5  # Hidden layer size in feed forward network inside transformer
+num_categories = len( COMPOSERS_LIST )
 
 inputs = layers.Input(shape=(MEASURES_PER_SAMPLE, embed_dim))
 embedding_layer = TokenAndPositionEmbedding(MEASURES_PER_SAMPLE, 0, embed_dim)
@@ -149,7 +153,7 @@ x = layers.GlobalAveragePooling1D()(x)
 x = layers.Dropout(0.3)(x)
 x = layers.Dense(200, activation="relu")(x)
 x = layers.Dropout(0.3)(x)
-outputs = layers.Dense(10, activation="softmax")(x)
+outputs = layers.Dense(num_categories, activation="softmax")(x)
 
 model = keras.Model(inputs=inputs, outputs=outputs)
 
