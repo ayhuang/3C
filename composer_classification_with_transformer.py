@@ -9,10 +9,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-META_CVS_PATH = "Dataset/classifier/meta_data_labeled.csv"
-MEASURES_PER_SAMPLE = 5
-GAP_BETWEEN_SAMPLE = 2
-
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
         super(TransformerBlock, self).__init__()
@@ -67,7 +63,7 @@ def normalize_measure_array( x ):
 
 
 # loan data based on meta_data_file, return x_train, y_train, x_val, y_val
-def load_data( meta_data_file, shuffle=True, measures_per_sample = MEASURES_PER_SAMPLE, max_skip_rate = 2 ):
+def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate = 2 ):
     df = pd.read_csv( meta_data_file )
     pd.options.display.width= None
 
@@ -98,19 +94,23 @@ def load_data( meta_data_file, shuffle=True, measures_per_sample = MEASURES_PER_
             x = np.full(( measures_per_sample, s.shape[1] + 1), encode_composer( composer ),dtype='float32')
             x[:,:-1] = s
             if row['use'] == 'v':
-                s_val.append( x )
+                s_train.append( x )
             if row['use'] == 't':
                 s_train.append( x )
             #skip random number of measures
             k1 = k2 + random.randint(0, max_skip_rate)
             k2 = k1 + measures_per_sample
 
-    train_arr = np.array(s_train)
-    val_arr = np.array(s_val)
+    t_arr = np.array(s_train)
+    #val_arr = np.array(s_val)
     if shuffle:
-         np.random.shuffle( train_arr )
-         np.random.shuffle( val_arr )
+         np.random.shuffle( t_arr )
+         index = int(t_arr.shape[0]*0.90)
+         #np.random.shuffle( val_arr )
 
+    # split
+    train_arr = t_arr[:index]
+    val_arr = t_arr[index:]
     #separate label, input
     x_train = train_arr[:,:,:-1]
     x_val = val_arr[:,:,:-1]
@@ -119,7 +119,11 @@ def load_data( meta_data_file, shuffle=True, measures_per_sample = MEASURES_PER_
     return (x_train, y_train),(x_val, y_val)
 
 
-(x_train, y_train), (x_val, y_val) = load_data(META_CVS_PATH, shuffle=False)
+###############################################################################
+META_CVS_PATH = "Dataset/classifier/meta_data_labeled.csv"
+MEASURES_PER_SAMPLE = 4
+GAP_BETWEEN_SAMPLE = 2
+(x_train, y_train), (x_val, y_val) = load_data(META_CVS_PATH,measures_per_sample=MEASURES_PER_SAMPLE,max_skip_rate=GAP_BETWEEN_SAMPLE, shuffle=True)
 
 print(f' {x_train.shape} Training sequences, with label {y_train.shape}')
 print(f' {x_val.shape} Training sequences, with label {y_val.shape}')
@@ -142,9 +146,9 @@ x = embedding_layer(inputs)
 transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
 x = transformer_block(x)
 x = layers.GlobalAveragePooling1D()(x)
-x = layers.Dropout(0.2)(x)
+x = layers.Dropout(0.3)(x)
 x = layers.Dense(200, activation="relu")(x)
-x = layers.Dropout(0.2)(x)
+x = layers.Dropout(0.3)(x)
 outputs = layers.Dense(10, activation="softmax")(x)
 
 model = keras.Model(inputs=inputs, outputs=outputs)
@@ -157,6 +161,6 @@ model.compile(
 
 model.summary()
 
-history = model.fit( x_train, y_train, batch_size=32, epochs=10, validation_data=(x_val, y_val))
+history = model.fit( x_train, y_train, batch_size=32, epochs=200, validation_data=(x_val, y_val), shuffle=True)
 
 
