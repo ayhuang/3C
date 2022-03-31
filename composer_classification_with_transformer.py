@@ -124,8 +124,8 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
 
 ###############################################################################
 META_CVS_PATH = "Dataset/classifier/meta_data_labeled.csv"
-MEASURES_PER_SAMPLE = 4
-GAP_BETWEEN_SAMPLE = 3
+MEASURES_PER_SAMPLE = 3
+GAP_BETWEEN_SAMPLE = 1
 MODEL_FOLDER = "Model"
 
 (x_train, y_train), (x_val, y_val) = load_data(META_CVS_PATH,measures_per_sample=MEASURES_PER_SAMPLE,max_skip_rate=GAP_BETWEEN_SAMPLE, shuffle=True)
@@ -133,18 +133,12 @@ MODEL_FOLDER = "Model"
 print(f' {x_train.shape} Training sequences, with label {y_train.shape}')
 print(f' {x_val.shape} Training sequences, with label {y_val.shape}')
 
-
-"""## Create classifier model using transformer layer
-
-Transformer layer outputs one vector for each time step of our input sequence.
-Here, we take the mean across all time steps and
-use a feed forward network on top of it to classify text.
-"""
-
 embed_dim = 200  # Embedding size for each token
 num_heads = 2  # Number of attention heads
 ff_dim = 5  # Hidden layer size in feed forward network inside transformer
 num_categories = len( COMPOSERS_LIST )
+
+## Create classifier model using transformer layer
 
 inputs = layers.Input(shape=(MEASURES_PER_SAMPLE, embed_dim))
 embedding_layer = TokenAndPositionEmbedding(MEASURES_PER_SAMPLE, 0, embed_dim)
@@ -159,7 +153,7 @@ outputs = layers.Dense(num_categories, activation="softmax")(x)
 
 model = keras.Model(inputs=inputs, outputs=outputs)
 
-"""## Train and Evaluate"""
+## Train and Evaluate
 
 model.compile(
     optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
