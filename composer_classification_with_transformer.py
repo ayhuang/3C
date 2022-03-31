@@ -124,7 +124,7 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
 
 ###############################################################################
 META_CVS_PATH = "Dataset/classifier/meta_data_labeled.csv"
-MEASURES_PER_SAMPLE = 6
+MEASURES_PER_SAMPLE = 4
 GAP_BETWEEN_SAMPLE = 3
 (x_train, y_train), (x_val, y_val) = load_data(META_CVS_PATH,measures_per_sample=MEASURES_PER_SAMPLE,max_skip_rate=GAP_BETWEEN_SAMPLE, shuffle=True)
 
@@ -150,9 +150,9 @@ x = embedding_layer(inputs)
 transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
 x = transformer_block(x)
 x = layers.GlobalAveragePooling1D()(x)
-x = layers.Dropout(0.3)(x)
+x = layers.Dropout(0.4)(x)
 x = layers.Dense(200, activation="relu")(x)
-x = layers.Dropout(0.3)(x)
+x = layers.Dropout(0.4)(x)
 outputs = layers.Dense(num_categories, activation="softmax")(x)
 
 model = keras.Model(inputs=inputs, outputs=outputs)
