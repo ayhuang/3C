@@ -126,6 +126,8 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
 META_CVS_PATH = "Dataset/classifier/meta_data_labeled.csv"
 MEASURES_PER_SAMPLE = 6
 GAP_BETWEEN_SAMPLE = 3
+MODEL_FOLDER = "Model"
+
 (x_train, y_train), (x_val, y_val) = load_data(META_CVS_PATH,measures_per_sample=MEASURES_PER_SAMPLE,max_skip_rate=GAP_BETWEEN_SAMPLE, shuffle=True)
 
 print(f' {x_train.shape} Training sequences, with label {y_train.shape}')
@@ -167,4 +169,4 @@ model.summary()
 
 history = model.fit( x_train, y_train, batch_size=32, epochs=200, validation_data=(x_val, y_val), shuffle=True)
 
-
+model.save(MODEL_FOLDER )
