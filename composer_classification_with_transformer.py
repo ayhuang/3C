@@ -124,7 +124,7 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
 
 ###############################################################################
 META_CVS_PATH = "Dataset/classifier/meta_data_labeled.csv"
-MEASURES_PER_SAMPLE = 3
+MEASURES_PER_SAMPLE = 5
 GAP_BETWEEN_SAMPLE = 1
 MODEL_FOLDER = "Model"
 
@@ -143,7 +143,7 @@ num_categories = len( COMPOSERS_LIST )
 inputs = layers.Input(shape=(MEASURES_PER_SAMPLE, embed_dim))
 embedding_layer = TokenAndPositionEmbedding(MEASURES_PER_SAMPLE, 0, embed_dim)
 x = embedding_layer(inputs)
-transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
+transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim, rate=0.3)
 x = transformer_block(x)
 x = layers.GlobalAveragePooling1D()(x)
 x = layers.Dropout(0.4)(x)
