@@ -42,9 +42,6 @@ class TokenAndPositionEmbedding(layers.Layer):
         #maxlen = tf.shape(x)[0].shape
         positions = tf.range(start=0, limit=self.width, delta=1)
         positions = self.pos_emb(positions)
-#        print(f'position shape : {positions.shape}, value {positions[0:15]}')
-  #      x = self.token_emb(x)
- #       print( f' token shape : {x.shape}')
         return x + positions
 
 
@@ -90,8 +87,6 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
         k1 = 0
         k2 = k1 + measures_per_sample
         while k2 < measures_in_file:
-
-            #y_val.append( encode_composer( composer ))
             # make one sample
             s = encoded_measure_array[k1:k2] # shape = (measures_per_sample, max_depth_per_measure, 2)
             s = s.reshape( measures_per_sample, s.shape[1] * s.shape[2]) # reshape each single measure from (max_depth_per_measure,2) to a vector of ( 2*max_depth_per_measure)
@@ -105,15 +100,13 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
             k2 = k1 + measures_per_sample
 
     t_arr = np.array(s_train)
-    #val_arr = np.array(s_val)
     if shuffle:
          np.random.shuffle( t_arr )
-         index = int(t_arr.shape[0]*0.90)
-         #np.random.shuffle( val_arr )
 
-    # split
-    train_arr = t_arr[:index]
-    val_arr = t_arr[index:]
+    # split into train and validation
+    split_index = int(t_arr.shape[0] * 0.90)
+    train_arr = t_arr[:split_index]
+    val_arr = t_arr[split_index:]
     #separate label, input
     x_train = train_arr[:,:,:-1]
     x_val = val_arr[:,:,:-1]
