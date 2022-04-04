@@ -9,7 +9,11 @@ from sklearn import preprocessing
 MODEL_FOLDER = "Model"
 #INPUT_SAMPLE_NPY = "Dataset/classifier/Bach/AveMaria.npy"
 #INPUT_SAMPLE_NPY = "Dataset/classifier/Bach/Prelude and Fugue in A, BWV 888.npy"
-INPUT_SAMPLE_NPY = "Dataset/classifier/Beethoven/Piano Sonatas/Piano Sonata n08 op13 3mov ''Pathetique''.npy"
+#INPUT_SAMPLE_NPY = "Dataset/classifier/Beethoven/Symphonies/Symphony op93 n8 3mov .npy"
+#INPUT_SAMPLE_NPY = "Dataset/classifier/Mozart/K314 Flute Concerto n2 2mov.npy"
+#INPUT_SAMPLE_NPY = "Dataset/classifier/Mozart/K617 Adagio.npy"
+#INPUT_SAMPLE_NPY = "Dataset/classifier/Mozart/Symphonies/Symphony n33 K319 2mov.npy"
+INPUT_SAMPLE_NPY = "Dataset/classifier/Rachmaninov/rach3.npy"
 
 model = keras.models.load_model( MODEL_FOLDER )
 

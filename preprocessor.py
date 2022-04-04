@@ -68,7 +68,7 @@ def load_data( meta_data_file,  measures_per_sample, shuffle=True,max_skip_rate 
     for index, row in df1.iterrows():
         composer = row['composer']
         npy_file =  row['npy_file_path']
-        s_train.append( load_single_piece( npy_file, measures_per_sample, max_skip_rate, encode_composer(composer)))
+        s_train.extend( load_single_piece( npy_file, measures_per_sample, max_skip_rate, encode_composer(composer)))
 
     t_arr = np.array(s_train)
     #val_arr = np.array(s_val)
